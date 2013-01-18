@@ -62,6 +62,7 @@ def find_namespace(content):
 
 SYMF_RMV = re.compile(r"""\s+('|")Symfony\\Component\\Console('|")\s*=>\s*path\(('|")sys('|")\)\s*\.\s*('|")vendor/Symfony/Component/Console('|"),""")
 REQ_RMV = re.compile(r"""require\s+path\(['|"]sys['|"]\)\s*.\s*['|"]\w+['|"]\s*.\s*EXT;""")
+AUTOLOAD_RMV = re.compile(r"Autoloader::(namespaces|map)\(array\([^;]+;")
 
 
 def curate_content(content):
@@ -113,9 +114,13 @@ def scan_file(filename, extension='.php'):
         declaration['namespace'] = '' if skip_namespace(filename) else find_namespace(content)
         declaration['namespace_usages'] = find_namespace_usage(content)
 
-        if name.split('\\')[-1] == 'core':
+        basename = name.split('\\')[-1]
+        if basename == 'core':
             content = SYMF_RMV.sub('', content)
             content = REQ_RMV.sub('', content)
+            content = AUTOLOAD_RMV.sub('', content)
+        elif basename == 'laravel':
+            content = re.sub(r"require\s+[^;]+;", '', content)
 
         declaration['code'] = curate_content(content)
         append_file(declaration['namespace'], declaration)

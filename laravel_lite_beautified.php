@@ -3,222 +3,19 @@
  * @package  Laravel Lite
  * @version  3.2.13
  */
-/****    laravel\helpers.php    ****/
-function e($value)
-{
-	return HTML::entities($value);
-}
-function __($key, $replacements = array(), $language = null)
-{
-	return Lang::line($key, $replacements, $language);
-}
-function dd($value)
-{
-	echo "<pre>";
-	var_dump($value);
-	echo "</pre>";
-	die;
-}
-function array_get($array, $key, $default = null)
-{
-	if (is_null($key)) return $array;
-	foreach (explode('.', $key) as $segment) {
-		if (!is_array($array) or !array_key_exists($segment, $array)) {
-			return value($default);
-		}
-		$array = $array[$segment];
-	}
-	return $array;
-}
-function array_set(&$array, $key, $value)
-{
-	if (is_null($key)) return $array = $value;
-	$keys = explode('.', $key);
-	while (count($keys) > 1) {
-		$key = array_shift($keys);
-		if (!isset($array[$key]) or !is_array($array[$key])) {
-			$array[$key] = array();
-		}
-		$array = & $array[$key];
-	}
-	$array[array_shift($keys) ] = $value;
-}
-function array_forget(&$array, $key)
-{
-	$keys = explode('.', $key);
-	while (count($keys) > 1) {
-		$key = array_shift($keys);
-		if (!isset($array[$key]) or !is_array($array[$key])) {
-			return;
-		}
-		$array = & $array[$key];
-	}
-	unset($array[array_shift($keys) ]);
-}
-function array_first($array, $callback, $default = null)
-{
-	foreach ($array as $key => $value) {
-		if (call_user_func($callback, $key, $value)) return $value;
-	}
-	return value($default);
-}
-function array_strip_slashes($array)
-{
-	$result = array();
-	foreach ($array as $key => $value) {
-		$key = stripslashes($key);
-		if (is_array($value)) {
-			$result[$key] = array_strip_slashes($value);
-		} else {
-			$result[$key] = stripslashes($value);
-		}
-	}
-	return $result;
-}
-function array_divide($array)
-{
-	return array(array_keys($array), array_values($array));
-}
-function array_pluck($array, $key)
-{
-	return array_map(function ($v) use ($key)
-	{
-		return is_object($v) ? $v->$key : $v[$key];
-	}, $array);
-}
-function array_only($array, $keys)
-{
-	return array_intersect_key($array, array_flip((array)$keys));
-}
-function array_except($array, $keys)
-{
-	return array_diff_key($array, array_flip((array)$keys));
-}
-function eloquent_to_json($models)
-{
-	if ($models instanceof Laravel\Database\Eloquent\Model) {
-		return json_encode($models->to_array());
-	}
-	return json_encode(array_map(function ($m)
-	{
-		return $m->to_array();
-	}, $models));
-}
-function magic_quotes()
-{
-	return function_exists('get_magic_quotes_gpc') and get_magic_quotes_gpc();
-}
-function head($array)
-{
-	return reset($array);
-}
-function url($url = '', $https = null)
-{
-	return Laravel\URL::to($url, $https);
-}
-function asset($url, $https = null)
-{
-	return Laravel\URL::to_asset($url, $https);
-}
-function action($action, $parameters = array())
-{
-	return Laravel\URL::to_action($action, $parameters);
-}
-function route($name, $parameters = array())
-{
-	return Laravel\URL::to_route($name, $parameters);
-}
-function starts_with($haystack, $needle)
-{
-	return strpos($haystack, $needle) === 0;
-}
-function ends_with($haystack, $needle)
-{
-	return $needle == substr($haystack, strlen($haystack) - strlen($needle));
-}
-function str_contains($haystack, $needle)
-{
-	foreach ((array)$needle as $n) {
-		if (strpos($haystack, $n) !== false) return true;
-	}
-	return false;
-}
-function str_finish($value, $cap)
-{
-	return rtrim($value, $cap) . $cap;
-}
-function str_object($value)
-{
-	return is_object($value) and method_exists($value, '__toString');
-}
-function root_namespace($class, $separator = '\\')
-{
-	if (str_contains($class, $separator)) {
-		return head(explode($separator, $class));
-	}
-}
-function class_basename($class)
-{
-	if (is_object($class)) $class = get_class($class);
-	return basename(str_replace('\\', '/', $class));
-}
-function value($value)
-{
-	return (is_callable($value) and !is_string($value)) ? call_user_func($value) : $value;
-}
-function with($object)
-{
-	return $object;
-}
-function has_php($version)
-{
-	return version_compare(PHP_VERSION, $version) >= 0;
-}
-function view($view, $data = array())
-{
-	if (is_null($view)) return '';
-	return Laravel\View::make($view, $data);
-}
-function render($view, $data = array())
-{
-	if (is_null($view)) return '';
-	return Laravel\View::make($view, $data)->render();
-}
-function render_each($partial, array $data, $iterator, $empty = 'raw|')
-{
-	return Laravel\View::render_each($partial, $data, $iterator, $empty);
-}
-function yield($section)
-{
-	return Laravel\Section::yield($section);
-}
-function get_cli_option($option, $default = null)
-{
-	foreach (Laravel\Request::foundation()->server->get('argv') as $argument) {
-		if (starts_with($argument, "--{$option}=")) {
-			return substr($argument, strlen($option) + 3);
-		}
-	}
-	return value($default);
-}
-function get_file_size($size)
-{
-	$units = array('Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB');
-	return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $units[$i];
-}
-/****    laravel\vendor\Symfony\Component\HttpFoundation\Resources\stubs\SessionHandlerInterface.php    ****/
-interface SessionHandlerInterface
-{
-	public function open($savePath, $sessionName);
-	public function close();
-	public function read($sessionId);
-	public function write($sessionId, $data);
-	public function destroy($sessionId);
-	public function gc($lifetime);
-}
 namespace Symfony\Component\HttpFoundation\Session\Attribute
 {
 	use Symfony\Component\HttpFoundation\Session\SessionBagInterface;
+	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface.php    ****/
+	interface AttributeBagInterface extends SessionBagInterface
+	{
+		public function has($name);
+		public function get($name, $default = null);
+		public function set($name, $value);
+		public function all();
+		public function replace(array $attributes);
+		public function remove($name);
+	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag.php    ****/
 	class AttributeBag implements AttributeBagInterface, \IteratorAggregate, \Countable
 	{
@@ -291,16 +88,6 @@ namespace Symfony\Component\HttpFoundation\Session\Attribute
 		{
 			return count($this->attributes);
 		}
-	}
-	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface.php    ****/
-	interface AttributeBagInterface extends SessionBagInterface
-	{
-		public function has($name);
-		public function get($name, $default = null);
-		public function set($name, $value);
-		public function all();
-		public function replace(array $attributes);
-		public function remove($name);
 	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Attribute\NamespacedAttributeBag.php    ****/
 	class NamespacedAttributeBag extends AttributeBag
@@ -564,7 +351,6 @@ namespace Laravel\Session\Drivers
 		}
 	}
 	/****    laravel\session\drivers\cookie.php    ****/
-	use Laravel\Crypter, Laravel\Cookie as C;
 	class Cookie extends Driver
 	{
 		const payload = 'session_payload';
@@ -622,7 +408,6 @@ namespace Laravel\Session\Drivers
 		}
 	}
 	/****    laravel\session\drivers\driver.php    ****/
-	use Laravel\Config, Laravel\Str;
 	abstract class Driver
 	{
 		abstract public function load($id);
@@ -1463,6 +1248,117 @@ namespace Symfony\Component\HttpFoundation {
 			return $this->expire < time();
 		}
 	}
+	/****    laravel\vendor\Symfony\Component\HttpFoundation\ParameterBag.php    ****/
+	class ParameterBag implements \IteratorAggregate, \Countable
+	{
+		protected $parameters;
+		public function __construct(array $parameters = array())
+		{
+			$this->parameters = $parameters;
+		}
+		public function all()
+		{
+			return $this->parameters;
+		}
+		public function keys()
+		{
+			return array_keys($this->parameters);
+		}
+		public function replace(array $parameters = array())
+		{
+			$this->parameters = $parameters;
+		}
+		public function add(array $parameters = array())
+		{
+			$this->parameters = array_replace($this->parameters, $parameters);
+		}
+		public function get($path, $default = null, $deep = false)
+		{
+			if (!$deep || false === $pos = strpos($path, '[')) {
+				return array_key_exists($path, $this->parameters) ? $this->parameters[$path] : $default;
+			}
+			$root = substr($path, 0, $pos);
+			if (!array_key_exists($root, $this->parameters)) {
+				return $default;
+			}
+			$value = $this->parameters[$root];
+			$currentKey = null;
+			for ($i = $pos, $c = strlen($path); $i < $c; $i++) {
+				$char = $path[$i];
+				if ('[' === $char) {
+					if (null !== $currentKey) {
+						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "[" at position %d.', $i));
+					}
+					$currentKey = '';
+				} elseif (']' === $char) {
+					if (null === $currentKey) {
+						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "]" at position %d.', $i));
+					}
+					if (!is_array($value) || !array_key_exists($currentKey, $value)) {
+						return $default;
+					}
+					$value = $value[$currentKey];
+					$currentKey = null;
+				} else {
+					if (null === $currentKey) {
+						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "%s" at position %d.', $char, $i));
+					}
+					$currentKey.= $char;
+				}
+			}
+			if (null !== $currentKey) {
+				throw new \InvalidArgumentException(sprintf('Malformed path. Path must end with "]".'));
+			}
+			return $value;
+		}
+		public function set($key, $value)
+		{
+			$this->parameters[$key] = $value;
+		}
+		public function has($key)
+		{
+			return array_key_exists($key, $this->parameters);
+		}
+		public function remove($key)
+		{
+			unset($this->parameters[$key]);
+		}
+		public function getAlpha($key, $default = '', $deep = false)
+		{
+			return preg_replace('/[^[:alpha:]]/', '', $this->get($key, $default, $deep));
+		}
+		public function getAlnum($key, $default = '', $deep = false)
+		{
+			return preg_replace('/[^[:alnum:]]/', '', $this->get($key, $default, $deep));
+		}
+		public function getDigits($key, $default = '', $deep = false)
+		{
+			return str_replace(array('-', '+'), '', $this->filter($key, $default, $deep, FILTER_SANITIZE_NUMBER_INT));
+		}
+		public function getInt($key, $default = 0, $deep = false)
+		{
+			return (int)$this->get($key, $default, $deep);
+		}
+		public function filter($key, $default = null, $deep = false, $filter = FILTER_DEFAULT, $options = array())
+		{
+			$value = $this->get($key, $default, $deep);
+			if (!is_array($options) && $options) {
+				$options = array('flags' => $options);
+			}
+			if (is_array($value) && !isset($options['flags'])) {
+				$options['flags'] = FILTER_REQUIRE_ARRAY;
+			}
+			return filter_var($value, $filter, $options);
+		}
+		public function getIterator()
+		{
+			return new \ArrayIterator($this->parameters);
+		}
+		public function count()
+		{
+			return count($this->parameters);
+		}
+	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\FileBag.php    ****/
 	class FileBag extends ParameterBag
 	{
@@ -1763,117 +1659,6 @@ namespace Symfony\Component\HttpFoundation {
 			if (function_exists('fastcgi_finish_request')) {
 				fastcgi_finish_request();
 			}
-		}
-	}
-	/****    laravel\vendor\Symfony\Component\HttpFoundation\ParameterBag.php    ****/
-	class ParameterBag implements \IteratorAggregate, \Countable
-	{
-		protected $parameters;
-		public function __construct(array $parameters = array())
-		{
-			$this->parameters = $parameters;
-		}
-		public function all()
-		{
-			return $this->parameters;
-		}
-		public function keys()
-		{
-			return array_keys($this->parameters);
-		}
-		public function replace(array $parameters = array())
-		{
-			$this->parameters = $parameters;
-		}
-		public function add(array $parameters = array())
-		{
-			$this->parameters = array_replace($this->parameters, $parameters);
-		}
-		public function get($path, $default = null, $deep = false)
-		{
-			if (!$deep || false === $pos = strpos($path, '[')) {
-				return array_key_exists($path, $this->parameters) ? $this->parameters[$path] : $default;
-			}
-			$root = substr($path, 0, $pos);
-			if (!array_key_exists($root, $this->parameters)) {
-				return $default;
-			}
-			$value = $this->parameters[$root];
-			$currentKey = null;
-			for ($i = $pos, $c = strlen($path); $i < $c; $i++) {
-				$char = $path[$i];
-				if ('[' === $char) {
-					if (null !== $currentKey) {
-						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "[" at position %d.', $i));
-					}
-					$currentKey = '';
-				} elseif (']' === $char) {
-					if (null === $currentKey) {
-						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "]" at position %d.', $i));
-					}
-					if (!is_array($value) || !array_key_exists($currentKey, $value)) {
-						return $default;
-					}
-					$value = $value[$currentKey];
-					$currentKey = null;
-				} else {
-					if (null === $currentKey) {
-						throw new \InvalidArgumentException(sprintf('Malformed path. Unexpected "%s" at position %d.', $char, $i));
-					}
-					$currentKey.= $char;
-				}
-			}
-			if (null !== $currentKey) {
-				throw new \InvalidArgumentException(sprintf('Malformed path. Path must end with "]".'));
-			}
-			return $value;
-		}
-		public function set($key, $value)
-		{
-			$this->parameters[$key] = $value;
-		}
-		public function has($key)
-		{
-			return array_key_exists($key, $this->parameters);
-		}
-		public function remove($key)
-		{
-			unset($this->parameters[$key]);
-		}
-		public function getAlpha($key, $default = '', $deep = false)
-		{
-			return preg_replace('/[^[:alpha:]]/', '', $this->get($key, $default, $deep));
-		}
-		public function getAlnum($key, $default = '', $deep = false)
-		{
-			return preg_replace('/[^[:alnum:]]/', '', $this->get($key, $default, $deep));
-		}
-		public function getDigits($key, $default = '', $deep = false)
-		{
-			return str_replace(array('-', '+'), '', $this->filter($key, $default, $deep, FILTER_SANITIZE_NUMBER_INT));
-		}
-		public function getInt($key, $default = 0, $deep = false)
-		{
-			return (int)$this->get($key, $default, $deep);
-		}
-		public function filter($key, $default = null, $deep = false, $filter = FILTER_DEFAULT, $options = array())
-		{
-			$value = $this->get($key, $default, $deep);
-			if (!is_array($options) && $options) {
-				$options = array('flags' => $options);
-			}
-			if (is_array($value) && !isset($options['flags'])) {
-				$options['flags'] = FILTER_REQUIRE_ARRAY;
-			}
-			return filter_var($value, $filter, $options);
-		}
-		public function getIterator()
-		{
-			return new \ArrayIterator($this->parameters);
-		}
-		public function count()
-		{
-			return count($this->parameters);
 		}
 	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\RedirectResponse.php    ****/
@@ -3490,6 +3275,18 @@ namespace Symfony\Component\HttpFoundation {
 }
 namespace Symfony\Component\HttpFoundation\Session\Flash {
 	use Symfony\Component\HttpFoundation\Session\SessionBagInterface;
+	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface.php    ****/
+	interface FlashBagInterface extends SessionBagInterface {
+		public function add($type, $message);
+		public function set($type, $message);
+		public function peek($type, array $default = array());
+		public function peekAll();
+		public function get($type, array $default = array());
+		public function all();
+		public function setAll(array $messages);
+		public function has($type);
+		public function keys();
+	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Flash\AutoExpireFlashBag.php    ****/
 	class AutoExpireFlashBag implements FlashBagInterface
 	{
@@ -3651,18 +3448,6 @@ namespace Symfony\Component\HttpFoundation\Session\Flash {
 		{
 			return count($this->flashes);
 		}
-	}
-	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface.php    ****/
-	interface FlashBagInterface extends SessionBagInterface {
-		public function add($type, $message);
-		public function set($type, $message);
-		public function peek($type, array $default = array());
-		public function peekAll();
-		public function get($type, array $default = array());
-		public function all();
-		public function setAll(array $messages);
-		public function has($type);
-		public function keys();
 	}
 }
 namespace Laravel\Database\Schema\Grammars
@@ -4309,6 +4094,57 @@ namespace Laravel\Database\Eloquent\Relationships
 	use Laravel\Str;
 	use Laravel\Database\Eloquent\Pivot;
 	use Laravel\Database\Eloquent\Model;
+	/****    laravel\database\eloquent\relationships\relationship.php    ****/
+	abstract class Relationship extends Query
+	{
+		protected $base;
+		public function __construct($model, $associated, $foreign)
+		{
+			$this->foreign = $foreign;
+			if ($associated instanceof Model) {
+				$this->model = $associated;
+			} else {
+				$this->model = new $associated;
+			}
+			if ($model instanceof Model) {
+				$this->base = $model;
+			} else {
+				$this->base = new $model;
+			}
+			$this->table = $this->table();
+			$this->constrain();
+		}
+		public static function foreign($model, $foreign = null)
+		{
+			if (!is_null($foreign)) return $foreign;
+			if (is_object($model)) {
+				$model = class_basename($model);
+			}
+			return strtolower(basename($model) . '_id');
+		}
+		protected function fresh_model($attributes = array())
+		{
+			$class = get_class($this->model);
+			return new $class($attributes);
+		}
+		public function foreign_key()
+		{
+			return static ::foreign($this->base, $this->foreign);
+		}
+		public function keys($results)
+		{
+			$keys = array();
+			foreach ($results as $result) {
+				$keys[] = $result->get_key();
+			}
+			return array_unique($keys);
+		}
+		public function with($includes)
+		{
+			$this->model->includes = (array)$includes;
+			return $this;
+		}
+	}
 	/****    laravel\database\eloquent\relationships\belongs_to.php    ****/
 	class Belongs_To extends Relationship
 	{
@@ -4363,6 +4199,35 @@ namespace Laravel\Database\Eloquent\Relationships
 		{
 			$this->base->fill(array($this->foreign => $id))->save();
 			return $this->base;
+		}
+	}
+	/****    laravel\database\eloquent\relationships\has_one_or_many.php    ****/
+	class Has_One_Or_Many extends Relationship
+	{
+		public function insert($attributes)
+		{
+			if ($attributes instanceof Model) {
+				$attributes->set_attribute($this->foreign_key(), $this->base->get_key());
+				return $attributes->save() ? $attributes : false;
+			} else {
+				$attributes[$this->foreign_key() ] = $this->base->get_key();
+				return $this->model->create($attributes);
+			}
+		}
+		public function update(array $attributes)
+		{
+			if ($this->model->timestamps()) {
+				$attributes['updated_at'] = new \DateTime;
+			}
+			return $this->table->update($attributes);
+		}
+		protected function constrain()
+		{
+			$this->table->where($this->foreign_key(), '=', $this->base->get_key());
+		}
+		public function eagerly_constrain($results)
+		{
+			$this->table->where_in($this->foreign_key(), $this->keys($results));
 		}
 	}
 	/****    laravel\database\eloquent\relationships\has_many.php    ****/
@@ -4607,86 +4472,6 @@ namespace Laravel\Database\Eloquent\Relationships
 			}
 		}
 	}
-	/****    laravel\database\eloquent\relationships\has_one_or_many.php    ****/
-	class Has_One_Or_Many extends Relationship
-	{
-		public function insert($attributes)
-		{
-			if ($attributes instanceof Model) {
-				$attributes->set_attribute($this->foreign_key(), $this->base->get_key());
-				return $attributes->save() ? $attributes : false;
-			} else {
-				$attributes[$this->foreign_key() ] = $this->base->get_key();
-				return $this->model->create($attributes);
-			}
-		}
-		public function update(array $attributes)
-		{
-			if ($this->model->timestamps()) {
-				$attributes['updated_at'] = new \DateTime;
-			}
-			return $this->table->update($attributes);
-		}
-		protected function constrain()
-		{
-			$this->table->where($this->foreign_key(), '=', $this->base->get_key());
-		}
-		public function eagerly_constrain($results)
-		{
-			$this->table->where_in($this->foreign_key(), $this->keys($results));
-		}
-	}
-	/****    laravel\database\eloquent\relationships\relationship.php    ****/
-	abstract class Relationship extends Query
-	{
-		protected $base;
-		public function __construct($model, $associated, $foreign)
-		{
-			$this->foreign = $foreign;
-			if ($associated instanceof Model) {
-				$this->model = $associated;
-			} else {
-				$this->model = new $associated;
-			}
-			if ($model instanceof Model) {
-				$this->base = $model;
-			} else {
-				$this->base = new $model;
-			}
-			$this->table = $this->table();
-			$this->constrain();
-		}
-		public static function foreign($model, $foreign = null)
-		{
-			if (!is_null($foreign)) return $foreign;
-			if (is_object($model)) {
-				$model = class_basename($model);
-			}
-			return strtolower(basename($model) . '_id');
-		}
-		protected function fresh_model($attributes = array())
-		{
-			$class = get_class($this->model);
-			return new $class($attributes);
-		}
-		public function foreign_key()
-		{
-			return static ::foreign($this->base, $this->foreign);
-		}
-		public function keys($results)
-		{
-			$keys = array();
-			foreach ($results as $result) {
-				$keys[] = $result->get_key();
-			}
-			return array_unique($keys);
-		}
-		public function with($includes)
-		{
-			$this->model->includes = (array)$includes;
-			return $this;
-		}
-	}
 }
 namespace Laravel\Database\Query
 {
@@ -4910,8 +4695,218 @@ namespace Laravel
 	use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 	use FilesystemIterator as fIterator;
 	use Laravel\Routing\Route;
-	use Router;
 	use ArrayAccess;
+	/****    laravel\view.php    ****/
+	class View implements ArrayAccess
+	{
+		public $view;
+		public $data;
+		public $path;
+		public static $shared = array();
+		public static $names = array();
+		public static $cache = array();
+		public static $last;
+		public static $render_count = 0;
+		const loader = 'laravel.view.loader';
+		const engine = 'laravel.view.engine';
+		public function __construct($view, $data = array())
+		{
+			$this->view = $view;
+			$this->data = $data;
+			if (starts_with($view, 'path: ')) {
+				$this->path = substr($view, 6);
+			} else {
+				$this->path = $this->path($view);
+			}
+			if (!isset($this->data['errors'])) {
+				if (Session::started() and Session::has('errors')) {
+					$this->data['errors'] = Session::get('errors');
+				} else {
+					$this->data['errors'] = new Messages;
+				}
+			}
+		}
+		public static function exists($view, $return_path = false)
+		{
+			if (starts_with($view, 'name: ') and array_key_exists($name = substr($view, 6), static ::$names)) {
+				$view = static ::$names[$name];
+			}
+			list($bundle, $view) = Bundle::parse($view);
+			$view = str_replace('.', '/', $view);
+			$path = Event::until(static ::loader, array($bundle, $view));
+			if (!is_null($path)) {
+				return $return_path ? $path : true;
+			}
+			return false;
+		}
+		protected function path($view)
+		{
+			if ($path = $this->exists($view, true)) {
+				return $path;
+			}
+			throw new \Exception("View [$view] doesn't exist.");
+		}
+		public static function file($bundle, $view, $directory)
+		{
+			$directory = str_finish($directory, DS);
+			if (file_exists($path = $directory . $view . EXT)) {
+				return $path;
+			} elseif (file_exists($path = $directory . $view . BLADE_EXT)) {
+				return $path;
+			}
+		}
+		public static function make($view, $data = array())
+		{
+			return new static ($view, $data);
+		}
+		public static function of($name, $data = array())
+		{
+			return new static (static ::$names[$name], $data);
+		}
+		public static function name($view, $name)
+		{
+			static ::$names[$name] = $view;
+		}
+		public static function composer($views, $composer)
+		{
+			$views = (array)$views;
+			foreach ($views as $view) {
+				Event::listen("laravel.composing: {$view}", $composer);
+			}
+		}
+		public static function render_each($view, array $data, $iterator, $empty = 'raw|')
+		{
+			$result = '';
+			if (count($data) > 0) {
+				foreach ($data as $key => $value) {
+					$with = array('key' => $key, $iterator => $value);
+					$result.= render($view, $with);
+				}
+			} else {
+				if (starts_with($empty, 'raw|')) {
+					$result = substr($empty, 4);
+				} else {
+					$result = render($empty);
+				}
+			}
+			return $result;
+		}
+		public function render()
+		{
+			static ::$render_count++;
+			Event::fire("laravel.composing: {$this->view}", array($this));
+			$contents = null;
+			if (Event::listeners(static ::engine)) {
+				$result = Event::until(static ::engine, array($this));
+				if (!is_null($result)) $contents = $result;
+			}
+			if (is_null($contents)) $contents = $this->get();
+			static ::$render_count--;
+			if (static ::$render_count == 0) {
+				Section::$sections = array();
+			}
+			return $contents;
+		}
+		public function get()
+		{
+			$__data = $this->data();
+			$__contents = $this->load();
+			ob_start() and extract($__data, EXTR_SKIP);
+			try {
+				eval('?>' . $__contents);
+			}
+			catch(\Exception $e) {
+				ob_get_clean();
+				throw $e;
+			}
+			$content = ob_get_clean();
+			if (Event::listeners('view.filter')) {
+				return Event::first('view.filter', array($content, $this->path));
+			}
+			return $content;
+		}
+		protected function load()
+		{
+			static ::$last = array('name' => $this->view, 'path' => $this->path);
+			if (isset(static ::$cache[$this->path])) {
+				return static ::$cache[$this->path];
+			} else {
+				return static ::$cache[$this->path] = file_get_contents($this->path);
+			}
+		}
+		public function data()
+		{
+			$data = array_merge($this->data, static ::$shared);
+			foreach ($data as $key => $value) {
+				if ($value instanceof View or $value instanceof Response) {
+					$data[$key] = $value->render();
+				}
+			}
+			return $data;
+		}
+		public function nest($key, $view, $data = array())
+		{
+			return $this->with($key, static ::make($view, $data));
+		}
+		public function with($key, $value = null)
+		{
+			if (is_array($key)) {
+				$this->data = array_merge($this->data, $key);
+			} else {
+				$this->data[$key] = $value;
+			}
+			return $this;
+		}
+		public function shares($key, $value)
+		{
+			static ::share($key, $value);
+			return $this;
+		}
+		public static function share($key, $value)
+		{
+			static ::$shared[$key] = $value;
+		}
+		public function offsetExists($offset)
+		{
+			return array_key_exists($offset, $this->data);
+		}
+		public function offsetGet($offset)
+		{
+			if (isset($this[$offset])) return $this->data[$offset];
+		}
+		public function offsetSet($offset, $value)
+		{
+			$this->data[$offset] = $value;
+		}
+		public function offsetUnset($offset)
+		{
+			unset($this->data[$offset]);
+		}
+		public function __get($key)
+		{
+			return $this->data[$key];
+		}
+		public function __set($key, $value)
+		{
+			$this->data[$key] = $value;
+		}
+		public function __isset($key)
+		{
+			return isset($this->data[$key]);
+		}
+		public function __toString()
+		{
+			return $this->render();
+		}
+		public function __call($method, $parameters)
+		{
+			if (strpos($method, 'with_') === 0) {
+				$key = substr($method, 5);
+				return $this->with($key, $parameters[0]);
+			}
+			throw new \Exception("Method [$method] is not defined on the View class.");
+		}
+	}
 	/****    laravel\asset.php    ****/
 	class Asset
 	{
@@ -5658,8 +5653,6 @@ namespace Laravel
 	ob_start('mb_output_handler');
 	spl_autoload_register(array('Laravel\\Autoloader', 'load'));
 	Autoloader::namespaces(array('Laravel' => path('sys')));
-	Autoloader::map(array('Laravel\\Database\\Eloquent\\Relationships\\Belongs_To' => path('sys') . 'database/eloquent/relationships/belongs_to' . EXT, 'Laravel\\Database\\Eloquent\\Relationships\\Has_Many' => path('sys') . 'database/eloquent/relationships/has_many' . EXT, 'Laravel\\Database\\Eloquent\\Relationships\\Has_Many_And_Belongs_To' => path('sys') . 'database/eloquent/relationships/has_many_and_belongs_to' . EXT, 'Laravel\\Database\\Eloquent\\Relationships\\Has_One' => path('sys') . 'database/eloquent/relationships/has_one' . EXT, 'Laravel\\Database\\Eloquent\\Relationships\\Has_One_Or_Many' => path('sys') . 'database/eloquent/relationships/has_one_or_many' . EXT,));
-	Autoloader::namespaces(array('Symfony\Component\HttpFoundation' => path('sys') . 'vendor/Symfony/Component/HttpFoundation',));
 	if (magic_quotes()) {
 		$magics = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST);
 		foreach ($magics as & $magic) {
@@ -6730,20 +6723,16 @@ namespace Laravel
 		}
 	}
 	/****    laravel\laravel.php    ****/
-	require 'core.php';
 	set_exception_handler(function ($e)
 	{
-		require_once path('sys') . 'error' . EXT;
 		Error::exception($e);
 	});
 	set_error_handler(function ($code, $error, $file, $line)
 	{
-		require_once path('sys') . 'error' . EXT;
 		Error::native($code, $error, $file, $line);
 	});
 	register_shutdown_function(function ()
 	{
-		require_once path('sys') . 'error' . EXT;
 		Error::shutdown();
 	});
 	error_reporting(-1);
@@ -7698,7 +7687,6 @@ namespace Laravel
 		}
 	}
 	/****    laravel\url.php    ****/
-	use Laravel\Routing\Router, Laravel\Routing\Route;
 	class URL
 	{
 		public static $base;
@@ -8236,218 +8224,6 @@ namespace Laravel
 			throw new \Exception("Method [$method] does not exist.");
 		}
 	}
-	/****    laravel\view.php    ****/
-	use Closure, ArrayAccess;
-	class View implements ArrayAccess
-	{
-		public $view;
-		public $data;
-		public $path;
-		public static $shared = array();
-		public static $names = array();
-		public static $cache = array();
-		public static $last;
-		public static $render_count = 0;
-		const loader = 'laravel.view.loader';
-		const engine = 'laravel.view.engine';
-		public function __construct($view, $data = array())
-		{
-			$this->view = $view;
-			$this->data = $data;
-			if (starts_with($view, 'path: ')) {
-				$this->path = substr($view, 6);
-			} else {
-				$this->path = $this->path($view);
-			}
-			if (!isset($this->data['errors'])) {
-				if (Session::started() and Session::has('errors')) {
-					$this->data['errors'] = Session::get('errors');
-				} else {
-					$this->data['errors'] = new Messages;
-				}
-			}
-		}
-		public static function exists($view, $return_path = false)
-		{
-			if (starts_with($view, 'name: ') and array_key_exists($name = substr($view, 6), static ::$names)) {
-				$view = static ::$names[$name];
-			}
-			list($bundle, $view) = Bundle::parse($view);
-			$view = str_replace('.', '/', $view);
-			$path = Event::until(static ::loader, array($bundle, $view));
-			if (!is_null($path)) {
-				return $return_path ? $path : true;
-			}
-			return false;
-		}
-		protected function path($view)
-		{
-			if ($path = $this->exists($view, true)) {
-				return $path;
-			}
-			throw new \Exception("View [$view] doesn't exist.");
-		}
-		public static function file($bundle, $view, $directory)
-		{
-			$directory = str_finish($directory, DS);
-			if (file_exists($path = $directory . $view . EXT)) {
-				return $path;
-			} elseif (file_exists($path = $directory . $view . BLADE_EXT)) {
-				return $path;
-			}
-		}
-		public static function make($view, $data = array())
-		{
-			return new static ($view, $data);
-		}
-		public static function of($name, $data = array())
-		{
-			return new static (static ::$names[$name], $data);
-		}
-		public static function name($view, $name)
-		{
-			static ::$names[$name] = $view;
-		}
-		public static function composer($views, $composer)
-		{
-			$views = (array)$views;
-			foreach ($views as $view) {
-				Event::listen("laravel.composing: {$view}", $composer);
-			}
-		}
-		public static function render_each($view, array $data, $iterator, $empty = 'raw|')
-		{
-			$result = '';
-			if (count($data) > 0) {
-				foreach ($data as $key => $value) {
-					$with = array('key' => $key, $iterator => $value);
-					$result.= render($view, $with);
-				}
-			} else {
-				if (starts_with($empty, 'raw|')) {
-					$result = substr($empty, 4);
-				} else {
-					$result = render($empty);
-				}
-			}
-			return $result;
-		}
-		public function render()
-		{
-			static ::$render_count++;
-			Event::fire("laravel.composing: {$this->view}", array($this));
-			$contents = null;
-			if (Event::listeners(static ::engine)) {
-				$result = Event::until(static ::engine, array($this));
-				if (!is_null($result)) $contents = $result;
-			}
-			if (is_null($contents)) $contents = $this->get();
-			static ::$render_count--;
-			if (static ::$render_count == 0) {
-				Section::$sections = array();
-			}
-			return $contents;
-		}
-		public function get()
-		{
-			$__data = $this->data();
-			$__contents = $this->load();
-			ob_start() and extract($__data, EXTR_SKIP);
-			try {
-				eval('?>' . $__contents);
-			}
-			catch(\Exception $e) {
-				ob_get_clean();
-				throw $e;
-			}
-			$content = ob_get_clean();
-			if (Event::listeners('view.filter')) {
-				return Event::first('view.filter', array($content, $this->path));
-			}
-			return $content;
-		}
-		protected function load()
-		{
-			static ::$last = array('name' => $this->view, 'path' => $this->path);
-			if (isset(static ::$cache[$this->path])) {
-				return static ::$cache[$this->path];
-			} else {
-				return static ::$cache[$this->path] = file_get_contents($this->path);
-			}
-		}
-		public function data()
-		{
-			$data = array_merge($this->data, static ::$shared);
-			foreach ($data as $key => $value) {
-				if ($value instanceof View or $value instanceof Response) {
-					$data[$key] = $value->render();
-				}
-			}
-			return $data;
-		}
-		public function nest($key, $view, $data = array())
-		{
-			return $this->with($key, static ::make($view, $data));
-		}
-		public function with($key, $value = null)
-		{
-			if (is_array($key)) {
-				$this->data = array_merge($this->data, $key);
-			} else {
-				$this->data[$key] = $value;
-			}
-			return $this;
-		}
-		public function shares($key, $value)
-		{
-			static ::share($key, $value);
-			return $this;
-		}
-		public static function share($key, $value)
-		{
-			static ::$shared[$key] = $value;
-		}
-		public function offsetExists($offset)
-		{
-			return array_key_exists($offset, $this->data);
-		}
-		public function offsetGet($offset)
-		{
-			if (isset($this[$offset])) return $this->data[$offset];
-		}
-		public function offsetSet($offset, $value)
-		{
-			$this->data[$offset] = $value;
-		}
-		public function offsetUnset($offset)
-		{
-			unset($this->data[$offset]);
-		}
-		public function __get($key)
-		{
-			return $this->data[$key];
-		}
-		public function __set($key, $value)
-		{
-			$this->data[$key] = $value;
-		}
-		public function __isset($key)
-		{
-			return isset($this->data[$key]);
-		}
-		public function __toString()
-		{
-			return $this->render();
-		}
-		public function __call($method, $parameters)
-		{
-			if (strpos($method, 'with_') === 0) {
-				$key = substr($method, 5);
-				return $this->with($key, $parameters[0]);
-			}
-			throw new \Exception("Method [$method] is not defined on the View class.");
-		}
-	}
 }
 namespace Laravel\Database
 {
@@ -8463,7 +8239,6 @@ namespace Laravel\Database
 	use Laravel\Database\Query\Grammars\SQLServer;
 	use Laravel\Event;
 	/****    laravel\database\connection.php    ****/
-	use PDO, PDOStatement, Laravel\Config, Laravel\Event;
 	class Connection
 	{
 		public $pdo;
@@ -9082,6 +8857,16 @@ namespace Laravel\Database
 }
 namespace Symfony\Component\HttpFoundation\Session\Storage\Handler
 {
+	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeSessionHandler.php    ****/
+	if (version_compare(phpversion(), '5.4.0', '>=')) {
+		class NativeSessionHandler extends \SessionHandler
+		{
+		}
+	} else {
+		class NativeSessionHandler
+		{
+		}
+	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Storage\Handler\MemcachedSessionHandler.php    ****/
 	class MemcachedSessionHandler implements \SessionHandlerInterface
 	{
@@ -9236,16 +9021,6 @@ namespace Symfony\Component\HttpFoundation\Session\Storage\Handler
 			}
 			ini_set('session.save_path', $savePath);
 			ini_set('session.save_handler', 'files');
-		}
-	}
-	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeSessionHandler.php    ****/
-	if (version_compare(phpversion(), '5.4.0', '>=')) {
-		class NativeSessionHandler extends \SessionHandler
-		{
-		}
-	} else {
-		class NativeSessionHandler
-		{
 		}
 	}
 	/****    laravel\vendor\Symfony\Component\HttpFoundation\Session\Storage\Handler\NullSessionHandler.php    ****/
@@ -9578,7 +9353,6 @@ namespace Laravel\Auth\Drivers
 		}
 	}
 	/****    laravel\auth\drivers\eloquent.php    ****/
-	use Laravel\Hash, Laravel\Config;
 	class Eloquent extends Driver
 	{
 		public function retrieve($token)
